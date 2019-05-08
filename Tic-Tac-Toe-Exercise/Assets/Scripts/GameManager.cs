@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,8 +11,11 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private Player[] players;
 
+    [SerializeField] private GameObject xPiecePrefab;
+    [SerializeField] private GameObject oPiecePrefab;
+
     private Player currentActivePlayer;
-    private int turnNumber = 0;
+    private int turnNumber = 1;
 
     private void Awake()
     {
@@ -24,8 +28,7 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
 
-        tiles = GetComponents<Tile>();
-        SetupWinningCombinations();
+        // SetupWinningCombinations();
 
         RandomlyChooseStartingPlayer();
     }
@@ -35,10 +38,14 @@ public class GameManager : MonoBehaviour
         if (UnityEngine.Random.Range(0,100) % 2 == 0)
         {
             currentActivePlayer = players[0];
+            players[0].SetPlayerPiece(Pieces.X);
+            players[1].SetPlayerPiece(Pieces.O);
         }
         else
         {
             currentActivePlayer = players[1];
+            players[1].SetPlayerPiece(Pieces.X);
+            players[0].SetPlayerPiece(Pieces.O);
         }
     }
 
@@ -46,7 +53,33 @@ public class GameManager : MonoBehaviour
     {
         if (Input.GetMouseButtonUp(0))
         {
+            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit raycastHit;
+            if(Physics.Raycast(ray, out raycastHit))
+            {
+                if(raycastHit.collider.GetComponent<Tile>() != null)
+                {
+                    var tile = raycastHit.collider.GetComponent<Tile>();
+                    tile.SetTilePiece(currentActivePlayer.piece);
+                    PlacePieceOnTile(tile);
+                    turnNumber++;
+                    // CheckGameOver();
+                    SwitchTurns();
+                }
+            }
+            
+        }
+    }
 
+    private void PlacePieceOnTile(Tile tile)
+    {
+        if(currentActivePlayer.piece == Pieces.X)
+        {
+            Instantiate(xPiecePrefab, tile.transform.position, Quaternion.identity);
+        }
+        else
+        {
+            Instantiate(oPiecePrefab, tile.transform.position, Quaternion.identity);
         }
     }
 
