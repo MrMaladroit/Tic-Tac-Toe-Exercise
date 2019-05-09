@@ -2,13 +2,18 @@
 
 public class Tile : MonoBehaviour
 {
-    public Pieces CurrentPiece { get; private set; }
+    public State CurrentState { get; private set; }
 
-    public void SetTilePiece(Pieces piece)
+    private void Awake()
     {
-        if (piece != Pieces.O || piece != Pieces.X)
+        CurrentState = State.Undecided;
+    }
+
+    public void SetTilePiece(State state)
+    {
+        if (state != State.O || state != State.X)
         {
-            CurrentPiece = piece;
+            CurrentState = state;
         }
     }
 }
