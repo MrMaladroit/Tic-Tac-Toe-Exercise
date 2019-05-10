@@ -1,21 +1,34 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
+
     [SerializeField] private Tile[] tiles;
 
-    private Tile[][] winningCombinationOfTiles = new Tile[][] { };
+    private Tile[][] winningCombinationOfTiles = new Tile[8][] {
+        new Tile[3],
+        new Tile[3],
+        new Tile[3],
+        new Tile[3],
+        new Tile[3],
+        new Tile[3],
+        new Tile[3],
+        new Tile[3]
+    };
 
     [SerializeField]
     private Player[] players;
 
     [SerializeField] private GameObject xPiecePrefab;
     [SerializeField] private GameObject oPiecePrefab;
+    [SerializeField] private GameObject[] gameoverPanels;
+    [SerializeField] private UITurnText UIText;
+
 
     private Player currentActivePlayer;
     private int turnNumber = 1;
+    private bool isGameOver;
 
     private void Awake()
     {
@@ -28,52 +41,59 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
 
-        // SetupWinningCombinations();
+        SetupWinningCombinations();
 
         RandomlyChooseStartingPlayer();
     }
 
     private void RandomlyChooseStartingPlayer()
     {
-        if (UnityEngine.Random.Range(0,100) % 2 == 0)
+        if (UnityEngine.Random.Range(0, 100) % 2 == 0)
         {
             currentActivePlayer = players[0];
-            players[0].SetPlayerPiece(Pieces.X);
-            players[1].SetPlayerPiece(Pieces.O);
+            players[0].SetPlayerPiece(State.X);
+            players[1].SetPlayerPiece(State.O);
         }
         else
         {
             currentActivePlayer = players[1];
-            players[1].SetPlayerPiece(Pieces.X);
-            players[0].SetPlayerPiece(Pieces.O);
+            players[1].SetPlayerPiece(State.X);
+            players[0].SetPlayerPiece(State.O);
         }
+
+        UIText.SetTurnText(currentActivePlayer);
     }
 
     private void Update()
     {
-        if (Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButtonUp(0) && isGameOver != true)
         {
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit raycastHit;
-            if(Physics.Raycast(ray, out raycastHit))
+            if (Physics.Raycast(ray, out raycastHit))
             {
-                if(raycastHit.collider.GetComponent<Tile>() != null)
+                if (raycastHit.collider.GetComponent<Tile>() != null)
                 {
                     var tile = raycastHit.collider.GetComponent<Tile>();
-                    tile.SetTilePiece(currentActivePlayer.piece);
+                    tile.SetTilePiece(currentActivePlayer.state);
                     PlacePieceOnTile(tile);
                     turnNumber++;
-                    // CheckGameOver();
+
+                    if (CheckGameOver())
+                    {
+                        int winningPlayer = (currentActivePlayer == players[0] ? 0 : 1);
+                        gameoverPanels[winningPlayer].SetActive(true);
+                    }
                     SwitchTurns();
                 }
             }
-            
+
         }
     }
 
     private void PlacePieceOnTile(Tile tile)
     {
-        if(currentActivePlayer.piece == Pieces.X)
+        if (currentActivePlayer.state == State.X)
         {
             Instantiate(xPiecePrefab, tile.transform.position, Quaternion.identity);
         }
@@ -86,22 +106,32 @@ public class GameManager : MonoBehaviour
     private void SwitchTurns()
     {
         currentActivePlayer = (currentActivePlayer == players[0]) ? players[1] : players[0];
+        UIText.SetTurnText(currentActivePlayer);
     }
 
     private bool CheckGameOver()
     {
-        for (int i = 0; i <= 8; i++)
+        for (int i = 0; i <= winningCombinationOfTiles.Length - 1; i++)
         {
-            if (winningCombinationOfTiles[i][0].CurrentPiece == winningCombinationOfTiles[i][1].CurrentPiece &&
-                winningCombinationOfTiles[i][0].CurrentPiece == winningCombinationOfTiles[i][2].CurrentPiece)
+            if (winningCombinationOfTiles[i][0].CurrentState == winningCombinationOfTiles[i][1].CurrentState &&
+                winningCombinationOfTiles[i][0].CurrentState == winningCombinationOfTiles[i][2].CurrentState)
             {
-                return true;
+                if (winningCombinationOfTiles[i][0].CurrentState == State.Undecided ||
+                    winningCombinationOfTiles[i][1].CurrentState == State.Undecided ||
+                    winningCombinationOfTiles[i][2].CurrentState == State.Undecided)
+                {
+                    return false;
+                }
+
+                return isGameOver = true;
             }
         }
 
-        if (turnNumber <= 8)
+        if (turnNumber > 9)
         {
-            return true;
+            gameoverPanels[2].gameObject.SetActive(true);
+            isGameOver = true;
+            return false;
         }
         else
         {
