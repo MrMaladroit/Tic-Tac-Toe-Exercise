@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
@@ -42,8 +43,14 @@ public class GameManager : MonoBehaviour
         }
 
         SetupWinningCombinations();
-
         RandomlyChooseStartingPlayer();
+        SetupUIPlayerText();
+    }
+
+    private void SetupUIPlayerText()
+    {
+        UIText.SetTurnText(currentActivePlayer);
+        UIText.SetPlayerPieceText(players);
     }
 
     private void RandomlyChooseStartingPlayer()
@@ -60,8 +67,6 @@ public class GameManager : MonoBehaviour
             players[1].SetPlayerPiece(State.X);
             players[0].SetPlayerPiece(State.O);
         }
-
-        UIText.SetTurnText(currentActivePlayer);
     }
 
     private void Update()
@@ -75,7 +80,7 @@ public class GameManager : MonoBehaviour
                 if (raycastHit.collider.GetComponent<Tile>() != null)
                 {
                     var tile = raycastHit.collider.GetComponent<Tile>();
-                    tile.SetTilePiece(currentActivePlayer.state);
+                    tile.SetTilePiece(currentActivePlayer.Piece);
                     PlacePieceOnTile(tile);
                     turnNumber++;
 
@@ -83,6 +88,7 @@ public class GameManager : MonoBehaviour
                     {
                         int winningPlayer = (currentActivePlayer == players[0] ? 0 : 1);
                         gameoverPanels[winningPlayer].SetActive(true);
+                        return;
                     }
                     SwitchTurns();
                 }
@@ -93,7 +99,7 @@ public class GameManager : MonoBehaviour
 
     private void PlacePieceOnTile(Tile tile)
     {
-        if (currentActivePlayer.state == State.X)
+        if (currentActivePlayer.Piece == State.X)
         {
             Instantiate(xPiecePrefab, tile.transform.position, Quaternion.identity);
         }
@@ -120,7 +126,7 @@ public class GameManager : MonoBehaviour
                     winningCombinationOfTiles[i][1].CurrentState == State.Undecided ||
                     winningCombinationOfTiles[i][2].CurrentState == State.Undecided)
                 {
-                    return false;
+                    continue;
                 }
 
                 return isGameOver = true;
@@ -149,7 +155,7 @@ public class GameManager : MonoBehaviour
         winningCombinationOfTiles[3] = new Tile[] { tiles[0], tiles[3], tiles[6] };
         winningCombinationOfTiles[4] = new Tile[] { tiles[1], tiles[4], tiles[7] };
         winningCombinationOfTiles[5] = new Tile[] { tiles[2], tiles[5], tiles[8] };
-        winningCombinationOfTiles[6] = new Tile[] { tiles[0], tiles[4], tiles[7] };
+        winningCombinationOfTiles[6] = new Tile[] { tiles[0], tiles[4], tiles[8] };
         winningCombinationOfTiles[7] = new Tile[] { tiles[2], tiles[4], tiles[6] };
     }
 

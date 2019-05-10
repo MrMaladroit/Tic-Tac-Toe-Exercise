@@ -2,11 +2,11 @@
 
 public class Player : MonoBehaviour
 {
-    public State state { get; private set; }
+    public State Piece { get; private set; }
 
 
-    public void SetPlayerPiece(State state)
+    public void SetPlayerPiece(State piece)
     {
-        this.state = state;
+        this.Piece = piece;
     }
 }
