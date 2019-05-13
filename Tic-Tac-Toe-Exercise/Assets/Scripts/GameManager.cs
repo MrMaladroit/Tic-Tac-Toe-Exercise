@@ -12,6 +12,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject oPiecePrefab;
     [SerializeField] private UITurnText UIText;
 
+    [Header("Ranges for Randomizing Starting Player")]
+    [SerializeField] private int MinRange = 0;
+    [SerializeField] private int MaxRange = 100;
+
     private Player currentActivePlayer;
     private int turnNumber = 1;
     private bool isGameOver;
@@ -51,7 +55,7 @@ public class GameManager : MonoBehaviour
 
     private void RandomlyChooseStartingPlayer()
     {
-        if (UnityEngine.Random.Range(0, 100) % 2 == 0)
+        if (UnityEngine.Random.Range(MinRange, MaxRange) % 2 == 0)
         {
             currentActivePlayer = players[0];
             players[0].SetPlayerPiece(State.X);
