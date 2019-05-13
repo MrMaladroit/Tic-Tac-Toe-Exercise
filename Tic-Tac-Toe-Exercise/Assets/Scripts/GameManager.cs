@@ -6,6 +6,15 @@ public class GameManager : MonoBehaviour
     public static GameManager instance;
 
     [SerializeField] private Tile[] tiles;
+    [SerializeField] private Player[] players;
+    [SerializeField] private GameObject[] gameoverPanels;
+    [SerializeField] private GameObject xPiecePrefab;
+    [SerializeField] private GameObject oPiecePrefab;
+    [SerializeField] private UITurnText UIText;
+
+    private Player currentActivePlayer;
+    private int turnNumber = 1;
+    private bool isGameOver;
 
     private Tile[][] winningCombinationOfTiles = new Tile[8][] {
         new Tile[3],
@@ -17,19 +26,6 @@ public class GameManager : MonoBehaviour
         new Tile[3],
         new Tile[3]
     };
-
-    [SerializeField]
-    private Player[] players;
-
-    [SerializeField] private GameObject xPiecePrefab;
-    [SerializeField] private GameObject oPiecePrefab;
-    [SerializeField] private GameObject[] gameoverPanels;
-    [SerializeField] private UITurnText UIText;
-
-
-    private Player currentActivePlayer;
-    private int turnNumber = 1;
-    private bool isGameOver;
 
     private void Awake()
     {
