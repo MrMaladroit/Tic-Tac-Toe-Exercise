@@ -1,0 +1,21 @@
+TODO: 
+
+Create animation for drawing the board graphic
+Create animation for erasing the board graphic for new game
+Create animation for drawing X and O on board
+Create animation for drawing line through winning row 
+
+ANIMATION FOR BOARD
+Chalk drawing of | | and _ _ lines should start at the beginning of every game
+
+ANIMATION FOR ERASING
+Erasing should happen at the end of every game after the player has hit new game/restart
+
+ANIMATION FOR PIECES
+Animation should play after every time a player places a piece on the board.
+Animation should be randomly flipped to add a little variance to game
+
+ANIMATION FOR WINNING
+A line should start at the end or the beginning of winning row and cross through those tiles
+The animation should randomly be set to start on one or the other end of the row to add variance to the game
+The animation should randomly be set to start on one or the other end of the row to add variance to the game
