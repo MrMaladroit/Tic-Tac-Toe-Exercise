@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -30,6 +31,18 @@ public class GameManager : MonoBehaviour
         new Tile[3],
         new Tile[3]
     };
+    private int sceneIndex;
+
+    public void RestartGame()
+    {
+        SceneManager.LoadScene(sceneIndex);
+    }
+
+    public void Quit()
+    {
+        Application.Quit();
+        Debug.Log("Application Quit");
+    }
 
     private void Awake()
     {
@@ -45,6 +58,7 @@ public class GameManager : MonoBehaviour
         SetupWinningCombinations();
         RandomlyChooseStartingPlayer();
         SetupUIPlayerText();
+        sceneIndex = SceneManager.GetActiveScene().buildIndex;
     }
 
     private void SetupUIPlayerText()
@@ -86,7 +100,7 @@ public class GameManager : MonoBehaviour
 
                     if (CheckGameOver())
                     {
-                        int winningPlayer = (currentActivePlayer == players[0] ? 0 : 1);
+                        int winningPlayer = (currentActivePlayer == players[0] ? 0 : 1);                        
                         gameoverPanels[winningPlayer].SetActive(true);
                         return;
                     }
@@ -144,7 +158,6 @@ public class GameManager : MonoBehaviour
             return false;
         }
     }
-
 
 
     private void SetupWinningCombinations()
