@@ -94,9 +94,17 @@ public class GameManager : MonoBehaviour
                 if (raycastHit.collider.GetComponent<Tile>() != null)
                 {
                     var tile = raycastHit.collider.GetComponent<Tile>();
-                    tile.SetTilePiece(currentActivePlayer.Piece);
-                    PlacePieceOnTile(tile);
-                    turnNumber++;
+                    bool isTileUnOccupied = tile.CurrentState == State.Undecided;
+                    if (isTileUnOccupied)
+                    {
+                        tile.SetTilePiece(currentActivePlayer.Piece);
+                        PlacePieceOnTile(tile);
+                        turnNumber++;
+                    }
+                    else
+                    {
+                        return;
+                    }
 
                     if (CheckGameOver())
                     {
