@@ -16,4 +16,14 @@ public class Tile : MonoBehaviour
             CurrentState = state;
         }
     }
+
+    public void ClearTile()
+    {
+        CurrentState = State.Undecided;
+        var piece = GetComponentInChildren<SpriteRenderer>();
+        if(piece != null)
+        {
+            Destroy(piece);
+        }
+    }
 }

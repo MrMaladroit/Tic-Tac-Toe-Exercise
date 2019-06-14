@@ -9,12 +9,12 @@ public class UITurnText : MonoBehaviour
 
     public void SetTurnText(Player player)
     {
-        turnText.text = player.name + "'s turn";
+        turnText.text = player.Name + "'s turn";
     }
 
     public void SetPlayerPieceText(Player[] players)
     {
-        PlayerOnePiece.text = "Player 1's Piece : " + players[0].Piece;
-        PlayerTwoPiece.text = "Player 2's Piece : " + players[1].Piece;
+        PlayerOnePiece.text = players[0].Name + " : " + players[0].Piece;
+        PlayerTwoPiece.text = players[1].Name + " : " + players[1].Piece;
     }
 }

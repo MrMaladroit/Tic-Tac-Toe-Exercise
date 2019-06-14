@@ -2,15 +2,17 @@
 
 public class LineAnimationController : MonoBehaviour
 {
-    private LineRenderer line;
+    [SerializeField] LineFactory lineFactory;
+    [SerializeField] float lineWidth = 2f;
 
-    private void Awake()
-    {
-        line = GetComponentInChildren<LineRenderer>();
-    }
+    public Transform[] postions;
 
-    public void PlayAnimation()
+    private Line line;
+
+    public void DrawLine()
     {
-        line.SetPosition(1, new Vector3(0, -10, 1));
+        Vector2 start = postions[0].position;
+        Vector2 end = postions[1].position;
+        line = lineFactory.GetLine(start, end, lineWidth, Color.white);
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -8,19 +10,30 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private Tile[] tiles;
     [SerializeField] private Player[] players;
-    [SerializeField] private GameObject[] gameoverPanels;
+    [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private GameObject xPiecePrefab;
     [SerializeField] private GameObject oPiecePrefab;
     [SerializeField] private UITurnText UIText;
+    [SerializeField] private UserTextInput userTextInput;
+
 
     [Header("Ranges for Randomizing Starting Player")]
     [SerializeField] private int MinRange = 0;
     [SerializeField] private int MaxRange = 100;
 
+    [Header("Debug Options")]
+    [SerializeField] private bool autoPlay = false;
+    [SerializeField] private Player firstAIPlayer;
+    [SerializeField] private Player secondAIPlayer;
+    [SerializeField] private float durationBetweenMoves = 5f;
+    [SerializeField] private float waitTimeBetweenGamesInSeconds = 2f;
+    private float currentTime = 1f;
+
     private Player currentActivePlayer;
     private int turnNumber = 1;
-    private bool isGameOver;
-
+    private bool isGameOver = true;
+    private int sceneIndex;
+    private bool isDraw;
     private Tile[][] winningCombinationOfTiles = new Tile[8][] {
         new Tile[3],
         new Tile[3],
@@ -31,20 +44,9 @@ public class GameManager : MonoBehaviour
         new Tile[3],
         new Tile[3]
     };
-    private int sceneIndex;
-
-    public void RestartGame()
-    {
-        SceneManager.LoadScene(sceneIndex);
-    }
-
-    public void Quit()
-    {
-        Application.Quit();
-        Debug.Log("Application Quit");
-    }
 
     private void Awake()
+
     {
         if (instance != this)
         {
@@ -55,20 +57,34 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
 
+        if(autoPlay == false)
+            userTextInput.SetUpInputPanel(players);
+
         SetupWinningCombinations();
-        RandomlyChooseStartingPlayer();
-        SetupUIPlayerText();
+        RandomlyChooseStartingPlayer();       
         sceneIndex = SceneManager.GetActiveScene().buildIndex;
     }
 
-    private void SetupUIPlayerText()
+    public void SetupUIPlayerText()
     {
-        UIText.SetTurnText(currentActivePlayer);
-        UIText.SetPlayerPieceText(players);
+        if(autoPlay == false)
+        {
+            userTextInput.SetInputToPlayerName(players);
+            userTextInput.AmendPlayerName(players);
+            UIText.SetTurnText(currentActivePlayer);
+            UIText.SetPlayerPieceText(players);
+            isGameOver = false;
+        }
     }
-
     private void RandomlyChooseStartingPlayer()
     {
+        if(autoPlay)
+        {
+            currentActivePlayer = firstAIPlayer;
+            firstAIPlayer.SetPlayerPiece(State.X);
+            secondAIPlayer.SetPlayerPiece(State.O);
+            return;
+        }
         if (UnityEngine.Random.Range(MinRange, MaxRange) % 2 == 0)
         {
             currentActivePlayer = players[0];
@@ -85,7 +101,13 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetMouseButtonUp(0) && isGameOver != true)
+        if(autoPlay)
+        {
+            HandleAutoPlay();
+            return;
+        }
+
+        if (Input.GetMouseButtonDown(0) && isGameOver != true)
         {
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit raycastHit;
@@ -95,9 +117,9 @@ public class GameManager : MonoBehaviour
                 {
                     var tile = raycastHit.collider.GetComponent<Tile>();
                     bool isTileUnOccupied = tile.CurrentState == State.Undecided;
+
                     if (isTileUnOccupied)
-                    {
-                        tile.SetTilePiece(currentActivePlayer.Piece);
+                    {                        
                         PlacePieceOnTile(tile);
                         turnNumber++;
                     }
@@ -106,38 +128,77 @@ public class GameManager : MonoBehaviour
                         return;
                     }
 
-                    if (CheckGameOver())
-                    {
-                        int winningPlayer = (currentActivePlayer == players[0] ? 0 : 1);                        
-                        gameoverPanels[winningPlayer].SetActive(true);
-                        return;
+                    if(CheckGameOver())
+                    {                       
+                        gameOverPanel.GetComponentInChildren<Text>().text = "GAME OVER\n\n" + currentActivePlayer.Name + " Wins!";
+                        gameOverPanel.SetActive(true);
                     }
+
                     SwitchTurns();
                 }
             }
 
         }
     }
+    private void HandleAutoPlay()
+    {
+        currentTime += currentTime * Time.deltaTime;
 
+        if (currentTime >= durationBetweenMoves)
+        {
+            int randomTileIndex = UnityEngine.Random.Range(0, tiles.Length);
+            if (tiles[randomTileIndex].CurrentState == State.Undecided)
+            {
+                PlacePieceOnTile(tiles[randomTileIndex]);
+                turnNumber++;
+                if(CheckGameOver())
+                {
+                    StartCoroutine(WaitForTwoSeconds());
+                    currentTime = 1f;
+                    currentActivePlayer = firstAIPlayer;
+                    return;
+                }
+            }
+            else
+            {
+                return;
+            }
+
+            currentActivePlayer = currentActivePlayer == firstAIPlayer ? secondAIPlayer : firstAIPlayer;
+            currentTime = 1f;
+        }
+    }
+
+    private IEnumerator WaitForTwoSeconds()
+    {
+        yield return new WaitForSeconds(waitTimeBetweenGamesInSeconds);
+        ResetBoard();
+    }
+
+    private void ResetBoard()
+    {
+        foreach (Tile tile in tiles)
+        {
+            tile.ClearTile();
+        }
+    }
     private void PlacePieceOnTile(Tile tile)
     {
+
+        tile.SetTilePiece(currentActivePlayer.Piece);
+
         if (currentActivePlayer.Piece == State.X)
         {
-            Instantiate(xPiecePrefab, tile.transform.position, Quaternion.identity);
+            var piece = Instantiate(xPiecePrefab, tile.transform.position, Quaternion.identity);
+            piece.transform.SetParent(tile.transform);
         }
         else
         {
-            Instantiate(oPiecePrefab, tile.transform.position, Quaternion.identity);
+            var piece = Instantiate(oPiecePrefab, tile.transform.position, Quaternion.identity);
+            piece.transform.SetParent(tile.transform);
         }
     }
-
-    private void SwitchTurns()
-    {
-        currentActivePlayer = (currentActivePlayer == players[0]) ? players[1] : players[0];
-        UIText.SetTurnText(currentActivePlayer);
-    }
-
-    private bool CheckGameOver()
+    public bool CheckGameOver()
     {
         for (int i = 0; i <= winningCombinationOfTiles.Length - 1; i++)
         {
@@ -150,24 +211,43 @@ public class GameManager : MonoBehaviour
                 {
                     continue;
                 }
-
+                turnNumber = 0;
                 return isGameOver = true;
             }
         }
 
         if (turnNumber > 9)
         {
-            gameoverPanels[2].gameObject.SetActive(true);
+            isDraw = true;
             isGameOver = true;
-            return false;
+            turnNumber = 0;
+            return true;
         }
         else
         {
             return false;
         }
     }
+    private void SwitchTurns()
+    {
+        currentActivePlayer = (currentActivePlayer == players[0]) ? players[1] : players[0];
+        UIText.SetTurnText(currentActivePlayer);
+    } 
 
-
+    public void RestartGame()
+    {
+        SceneManager.LoadScene(sceneIndex);
+    }
+    public void Quit()
+    {
+        PlayerPrefs.DeleteAll();
+        Application.Quit();
+        Debug.Log("Application Quit");
+    }
+    public void LoadScene(int index)
+    {
+        SceneManager.LoadScene(index);
+    }
     private void SetupWinningCombinations()
     {
         winningCombinationOfTiles[0] = new Tile[] { tiles[0], tiles[1], tiles[2] };
@@ -179,6 +259,4 @@ public class GameManager : MonoBehaviour
         winningCombinationOfTiles[6] = new Tile[] { tiles[0], tiles[4], tiles[8] };
         winningCombinationOfTiles[7] = new Tile[] { tiles[2], tiles[4], tiles[6] };
     }
-
-
 }
